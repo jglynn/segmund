@@ -15,4 +15,4 @@ COPY . /app
 
 ENTRYPOINT [ "python" ]
 
-CMD [ "hello.py" ]
+CMD [ "segmund.py" ]

@@ -9,12 +9,18 @@ import time
 
 app = Flask(__name__, static_url_path='')
 
+# On IBM Cloud Cloud Foundry, get the port number from the environment variable PORT
+# When running this app on the local machine, default the port to 8000
+port = int(os.getenv('PORT', 8000))
+
 appCfg = None
 strava_token_url = "https://www.strava.com/oauth/token"
+current_domain = "localhost:{}".format(str(port))
 
 if 'APP_CONFIG' in os.environ:
     print('Found APP_CONFIG')
     appCfg = json.loads(os.getenv('APP_CONFIG'))
+    current_domain = "segmund.mybluemix"
     print(appCfg)
 elif os.path.isfile('config.json'):
     with open('config.json') as f:
@@ -49,17 +55,14 @@ elif os.path.isfile('vcap-local.json'):
         client = Cloudant(user, password, url=url, connect=True)
         db = client.create_database(db_name, throw_on_exists=False)
 
-# On IBM Cloud Cloud Foundry, get the port number from the environment variable PORT
-# When running this app on the local machine, default the port to 8000
-port = int(os.getenv('PORT', 8000))
-
 @app.route('/')
 def root():
     return app.send_static_file('index.html')
 
 @app.route('/register', methods=['GET'])
 def initiate_registration():
-    return app.send_static_file('register.html')
+    callback_uri = "http://{}/api/exchange_token&approval_prompt=force&scope=read_all,profile:read_all,activity:read_all".format(current_domain)
+    return render_template('register.html', callback_uri=callback_uri)
 
 @app.route('/register-result', methods=['GET'])
 def registration_result():
