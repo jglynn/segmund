@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Results</title>
+
+  <!-- Bootstrap -->
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  {% for segment, leaders in results.items() %}
+  <h1>{{ segment }}</h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Rank</th>
+        <th scope="col">Athlete</th>
+        <th scope="col">Time (Seconds)</th>
+        <th scope="col">Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for result in leaders %}
+      <tr>
+        <th scope="row">{{ result['rank'] }}</th>
+        <td>{{ result['athlete_name'] }}</td>
+        <td>{{ result['elapsed_time'] }}</td>
+        <td>{{ result['start_date'] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+
+</body>
+
+</html>
