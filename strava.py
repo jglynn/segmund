@@ -58,7 +58,11 @@ def refresh_access_token(client_id, secret, refresh_token):
     # todo check response
     return token_req.json()['access_token']
 
-# Given a segment, return club leaders for a given date range
+# /* Given a segment, return club leaders for a given date range
+# *
+# * date_range accepts: this_year, this_month, this_week, today
+# *
+# * docs: https://developers.strava.com/docs/reference/#api-Segments-getLeaderboardBySegmentId
 def segment_leaderboard(segment_id, token, club_id, date_range):
     segment_url = strava_leaderboard_url.format(segment_id,club_id,date_range,"50")
     print("getting {}".format(segment_url))

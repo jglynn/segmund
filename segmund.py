@@ -15,12 +15,9 @@ app = Flask(__name__, static_url_path='')
 port = int(os.getenv('PORT', 8000))
 
 app_cfg = None
-current_domain = "localhost:{}".format(str(port))
-
 if 'APP_CONFIG' in os.environ:
     print('Found APP_CONFIG')
     app_cfg = json.loads(os.getenv('APP_CONFIG'))
-    current_domain = "segmund.mybluemix"
     print(app_cfg)
     for (key,value) in os.environ.items():
         print("{}={}".format(str(key),str(value)))
@@ -28,6 +25,11 @@ elif os.path.isfile('config.json'):
     with open('config.json') as f:
         print('Found local APP_CONFIG')
         app_cfg = json.load(f)
+
+current_domain = "http://localhost:{}".format(str(port))
+if 'VCAP_APPLICATION' in os.environ:
+    vcap_app = json.loads(os.getenv('VCAP_APPLICATION'))
+    current_domain = "https://{}".format(vcap_app['application_uris'][0])
 
 db_name = 'mydb'
 client = None
@@ -64,7 +66,7 @@ def root():
 @app.route('/register', methods=['GET'])
 def initiate_registration_process():
     scopes = 'read_all,profile:read_all,activity:read_all'
-    callback_uri = "http://{}/exchange_token&approval_prompt=force&scope={}".format(current_domain, scopes)
+    callback_uri = "{}/exchange_token&approval_prompt=force&scope={}".format(current_domain, scopes)
     return render_template('register.html', callback_uri=callback_uri, client_id=app_cfg['STRAVA_CLIENT_ID'])
 
 @app.route('/register-result', methods=['GET'])
@@ -87,7 +89,7 @@ def register_user():
     state = request.args.get('state')
     auth_code = request.args.get('code')
     scope = request.args.get('scope')
-    
+
     user = strava.register_user(app_cfg['STRAVA_CLIENT_ID'], app_cfg['STRAVA_SECRET'], auth_code)
 
     if user is None:
