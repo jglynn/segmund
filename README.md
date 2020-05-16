@@ -1,4 +1,4 @@
-# segmund-py
+# segmund
 
 A cruddy thing for aggregating segment data from Strava.
 
@@ -33,4 +33,4 @@ Locally I've had luck with 3.6.5 and it's running 3.8.2 on IBM Cloud.
 
 ## Checking logs
 
-`ibmcloud cf logs segmund-py --recent`
+`ibmcloud cf logs segmund-toolchain --recent`

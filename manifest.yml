@@ -1,5 +1,5 @@
 ---
 applications:
- - name: segmund-py
+ - name: segmund-toolchain
    random-route: true
    memory: 128M

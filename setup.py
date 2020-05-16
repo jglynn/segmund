@@ -15,10 +15,10 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='segmun-py',
+    name='segmund-toolchain',
     version='1.0.0',
     description='A service for aggregating segment data from Strava',
     long_description='A service for aggregating segment data from Strava',
-    url='https://github.com/jglynn/segmund-py',
+    url='https://github.com/jglynn/segmund-toolchain',
     license='Apache-2.0'
 )
