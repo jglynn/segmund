@@ -18,7 +18,6 @@ app_cfg = None
 if 'APP_CONFIG' in os.environ:
     print('Found APP_CONFIG')
     app_cfg = json.loads(os.getenv('APP_CONFIG'))
-    print(app_cfg)
     for (key,value) in os.environ.items():
         print("{}={}".format(str(key),str(value)))
 elif os.path.isfile('config.json'):
