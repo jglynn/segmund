@@ -3,4 +3,4 @@ applications:
  - name:      segmund-toolchain
    memory:    128M
    routes:
-     - route: segmund-toolchain.mybluemix.net
+     - route: segmund.mybluemix.net
