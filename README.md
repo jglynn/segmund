@@ -18,7 +18,7 @@ Install Python 3
 ## Running segmund locally
 
 1. `python -m pip install -r requirements.txt` will install necessary Python deps
-2. `python segmund.py` will start up the app, by default it listens on port 8000 locally
+2. `python segmund.py` will start up the app, by default it listens on port `8000` locally
 
 ## Running on IBM Cloud
 
