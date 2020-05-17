@@ -107,16 +107,16 @@ def register_user():
     if user_document.exists():
         print('Doc with _id={}'.format(user['_id']))
 
-    return redirect('/users?username={}'.format(user['name']), code=302)
+    return redirect('/users?firstname={}'.format(user['firstname']), code=302)
 
 @app.route('/users', methods=['GET'])
 def get_users():
     if client:
-        username = request.args.get('username')
+        firstname = request.args.get('firstname')
         #current_ms_time = int(round(time.time()))
         selector = {'type': {'$eq': 'user'}}
         docs = db.get_query_result(selector)
-        return render_template('users.html', users=docs, username=username)
+        return render_template('users.html', users=docs, firstname=firstname)
     else:
         print('No database')
         return jsonify([])
