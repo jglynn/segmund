@@ -1,5 +1,6 @@
 ---
 applications:
- - name: segmund-toolchain
-   random-route: true
-   memory: 128M
+ - name:      segmund-toolchain
+   memory:    128M
+   routes:
+     - route: segmund-toolchain.mybluemix.net
