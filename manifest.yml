@@ -1,6 +1,6 @@
 ---
 applications:
- - name:      segmund-py
+ - name:      segmund-toolchain
    memory:    128M
    routes:
      - route: segmund.mybluemix.net
