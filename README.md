@@ -22,15 +22,14 @@ Locally I've had luck with 3.6.5 and it's running 3.8.2 on IBM Cloud.
 
 ## Running on IBM Cloud CF
 
+Commits to master automatically trigger CICD using [segmund-toolchain](https://cloud.ibm.com/devops/toolchains/09c005ff-2733-48e2-a792-1db8a909f8a2?env_id=ibm:yp:us-south)
+
 [https://segmund.mybluemix.net/](https://segmund.mybluemix.net/)
 
-## Deploying
+## Checking logs
+
+Install IBM Cloud CLI and then configure access
 
 `ibmcloud login --sso`
-
-`ibmcloud cf push`
-
-
-## Checking logs
 
 `ibmcloud cf logs segmund-toolchain --recent`

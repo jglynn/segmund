@@ -1,6 +1,0 @@
-
-login authz page
-https://www.strava.com/oauth/authorize?client_id=47678&response_type=code&redirect_uri=http://localhost:8000/api/exchange_token&approval_prompt=force&scope=read_all,profile:read_all,activity:read_all
-
-calls back with:
-http://localhost/exchange_token?state=&code=9d4de4b221d0cb12efdd2e25e025bf0917272c8b&scope=read,activity:read_all,profile:read_all,read_all
