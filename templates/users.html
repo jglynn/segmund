@@ -8,42 +8,68 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>Results</title>
+  <title>Registered Users</title>
 
   <!-- Bootstrap -->
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-  <link href="styles.css" rel="stylesheet">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="dashboard.css" rel="stylesheet">
 
 </head>
 
 <body>
+  <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/">Segmund</a>
+  </nav>
 
-  {% if firstname is defined and firstname != None %}
-  <h1>Congrats {{firstname}}, you've registered.</h1>
-  <hr/>
-  {% endif %}
+  <div class="container-fluid">
+    <div class="row">
+      <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+        <div class="sidebar-sticky">
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link" href="/results">Results</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/register">Register</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
 
-  <h1>Users</h1>
-  <table class="table">
-    <thead>
-      <tr>
-        <th scope="col">Strava Id</th>
-        <th scope="col">Name</th>
-        <th scope="col">First Name</th>
-        <th scope="col">Last Name</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for user in users %}
-      <tr>
-        <th scope="row">{{ user['_id'] }}</th>
-        <td>{{ user['name'] }}</td>
-        <td>{{ user['firstname'] }}</td>
-        <td>{{ user['lastname'] }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+
+      <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+        {% if firstname is defined and firstname != None %}
+        <h1>Congrats {{firstname}}, you've registered.</h1>
+        <hr />
+        {% endif %}
+
+        <h3>Registered Users</h3>
+        <div class="table-responsive">
+          <table class="table table-sm table-striped">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">Strava Id</th>
+                <th scope="col">Username</th>
+                <th scope="col">First Name</th>
+                <th scope="col">Last Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr>
+                <th scope="row"><a href="https://www.strava.com/athletes/{{ user['_id'] }}">{{ user['_id'] }}</a></th>
+                <td>{{ user['name'] }}</td>
+                <td>{{ user['firstname'] }}</td>
+                <td>{{ user['lastname'] }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </main>
+
+    </div>
+  </div>
 
 </body>
 

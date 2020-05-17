@@ -1,10 +1,5 @@
-html {
-  position: relative;
-  min-height: 100%;
-}
-body {
-  margin-bottom: 60px;
-}
+/* Placeholder for any cutom css */
+
 .footer {
   position: absolute;
   bottom: 0;
@@ -13,7 +8,4 @@ body {
   line-height: 60px;
   text-align: center;
   background-color: #f5f7fa;
-}
-.helloInput {
-  width: 300px;
 }

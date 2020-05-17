@@ -11,37 +11,72 @@
   <title>Results</title>
 
   <!-- Bootstrap -->
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-  <link href="styles.css" rel="stylesheet">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+  <link href="dashboard.css" rel="stylesheet">
 
 </head>
 
 <body>
+  <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+    <a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/">Segmund</a>
+  </nav>
 
-  {% for segment, leaders in results.items() %}
-  <h1>{{ segment }}</h1>
-  <table class="table">
-    <thead>
-      <tr>
-        <th scope="col">Rank</th>
-        <th scope="col">Athlete</th>
-        <th scope="col">Time (Seconds)</th>
-        <th scope="col">Date</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for result in leaders %}
-      <tr>
-        <th scope="row">{{ result['rank'] }}</th>
-        <td>{{ result['athlete_name'] }}</td>
-        <td>{{ result['elapsed_time'] }}</td>
-        <td>{{ result['start_date'] }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  {% endfor %}
+  <div class="container-fluid">
+    <div class="row">
+      <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+        <div class="sidebar-sticky">
+          <ul class="nav flex-column">
+            {% for segment, leaders in results.items() %}
+            <li class="nav-item">
+              <a class="nav-link" href="#{{ segment }}">
+                {{ segment }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          <hr />
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link" href="/register">Register</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/users">Users</a>
+            </li>
+          </ul>
+        </div>
+      </nav>
 
+      <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+        {% for segment, leaders in results.items() %}
+        <a name="{{ segment }}" />
+        <hr />
+        <h3>{{ segment }}</h3>
+        <div class="table-responsive">
+          <table class="table table-sm table-striped">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">Athlete</th>
+                <th scope="col">Time (Seconds)</th>
+                <th scope="col">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for result in leaders %}
+              <tr>
+                <th scope="row">{{ result['rank'] }}</th>
+                <td>{{ result['athlete_name'] }}</td>
+                <td>{{ result['elapsed_time'] }}</td>
+                <td>{{ result['start_date_local'] }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endfor %}
+      </main>
+    </div>
+  </div>
 </body>
 
 </html>
