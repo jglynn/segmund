@@ -1,9 +1,11 @@
 """
 A crappy Strava helper module
 """
+from typing import Dict
 import requests
 
 import stravalib
+
 
 strava_token_url = "https://www.strava.com/oauth/token"
 strava_leaderboard_url = "https://www.strava.com/api/v3/segments/{}/leaderboard?&club_id={}&date_range={}&per_page={}"
@@ -68,12 +70,12 @@ def refresh_access_token(client_id, secret, refresh_token):
 def segment_leaderboard(segment_id, token, club_id, date_range):
     print("getting segment leaderboard")
     client = stravalib.Client(token)
-    leader_result = client.get_segment_leaderboard(
+    leaderboard = client.get_segment_leaderboard(
         segment_id, club_id=club_id, timeframe=date_range)
+    leader_result = [get_leaderboard_entry_dict(entry)
+                     for entry in leaderboard]
     print(leader_result)
-    result_dict = [entry.log.__dict__ for entry in leader_result] 
-    print(result_dict)
-    return result_dict
+    return leader_result
 
 # Gather hop segment leaders for a given date range
 def hop_segment_leaders(token, date_range):
@@ -82,3 +84,23 @@ def hop_segment_leaders(token, date_range):
         segment_leaders[name] = segment_leaderboard(segment_id, token, hop_club, date_range)
     return segment_leaders
 
+
+def get_leaderboard_entry_dict(
+        entry: stravalib.model.SegmentLeaderboardEntry) -> Dict:
+    """Extract leaderboard entries to dict for table rendering.
+
+    Args:
+        entry: segment leaderboard entry extract elements
+
+    Returns
+        Dict with the following keys: athlete_name, elapsed_time, moving_time,
+        start_date, start_date_local, rank
+    """
+    return {
+        "athlete_name": entry.athlete_name,
+        "elapsed_time": entry.elapsed_time,
+        "moving_time": entry.moving_time,
+        "start_date": entry.start_date,
+        "start_date_local": entry.start_date_local,
+        "rank": entry.rank}
+    
