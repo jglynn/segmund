@@ -3,6 +3,8 @@ A crappy Strava helper module
 """
 import requests
 
+import stravalib
+
 strava_token_url = "https://www.strava.com/oauth/token"
 strava_leaderboard_url = "https://www.strava.com/api/v3/segments/{}/leaderboard?&club_id={}&date_range={}&per_page={}"
 hop_club = 631182
@@ -64,11 +66,14 @@ def refresh_access_token(client_id, secret, refresh_token):
 # *
 # * docs: https://developers.strava.com/docs/reference/#api-Segments-getLeaderboardBySegmentId
 def segment_leaderboard(segment_id, token, club_id, date_range):
-    segment_url = strava_leaderboard_url.format(segment_id,club_id,date_range,"50")
-    print("getting {}".format(segment_url))
-    leader_result = requests.get(segment_url, headers={'Content-Type':'application/json','Authorization': 'Bearer {}'.format(token)})
+    print("getting segment leaderboard")
+    client = stravalib.Client(token)
+    leader_result = client.get_segment_leaderboard(
+        segment_id, club_id=club_id, timeframe=date_range)
     print(leader_result)
-    return leader_result.json()['entries']
+    result_dict = [entry.log.__dict__ for entry in leader_result] 
+    print(result_dict)
+    return result_dict
 
 # Gather hop segment leaders for a given date range
 def hop_segment_leaders(token, date_range):
@@ -76,3 +81,4 @@ def hop_segment_leaders(token, date_range):
     for (segment_id,name) in hop_segments.items():
         segment_leaders[name] = segment_leaderboard(segment_id, token, hop_club, date_range)
     return segment_leaders
+
