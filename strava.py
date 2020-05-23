@@ -1,7 +1,11 @@
 """
 A crappy Strava helper module
 """
+from typing import Dict
 import requests
+
+import stravalib
+
 
 strava_token_url = "https://www.strava.com/oauth/token"
 strava_leaderboard_url = "https://www.strava.com/api/v3/segments/{}/leaderboard?&club_id={}&date_range={}&per_page={}"
@@ -64,11 +68,14 @@ def refresh_access_token(client_id, secret, refresh_token):
 # *
 # * docs: https://developers.strava.com/docs/reference/#api-Segments-getLeaderboardBySegmentId
 def segment_leaderboard(segment_id, token, club_id, date_range):
-    segment_url = strava_leaderboard_url.format(segment_id,club_id,date_range,"50")
-    print("getting {}".format(segment_url))
-    leader_result = requests.get(segment_url, headers={'Content-Type':'application/json','Authorization': 'Bearer {}'.format(token)})
+    print("getting segment leaderboard")
+    client = stravalib.Client(token)
+    leaderboard = client.get_segment_leaderboard(
+        segment_id, club_id=club_id, timeframe=date_range)
+    leader_result = [get_leaderboard_entry_dict(entry)
+                     for entry in leaderboard]
     print(leader_result)
-    return leader_result.json()['entries']
+    return leader_result
 
 # Gather hop segment leaders for a given date range
 def hop_segment_leaders(token, date_range):
@@ -76,3 +83,24 @@ def hop_segment_leaders(token, date_range):
     for (segment_id,name) in hop_segments.items():
         segment_leaders[name] = segment_leaderboard(segment_id, token, hop_club, date_range)
     return segment_leaders
+
+
+def get_leaderboard_entry_dict(
+        entry: stravalib.model.SegmentLeaderboardEntry) -> Dict:
+    """Extract leaderboard entries to dict for table rendering.
+
+    Args:
+        entry: segment leaderboard entry extract elements
+
+    Returns
+        Dict with the following keys: athlete_name, elapsed_time, moving_time,
+        start_date, start_date_local, rank
+    """
+    return {
+        "athlete_name": entry.athlete_name,
+        "elapsed_time": entry.elapsed_time,
+        "moving_time": entry.moving_time,
+        "start_date": entry.start_date,
+        "start_date_local": entry.start_date_local,
+        "rank": entry.rank}
+    
