@@ -3,13 +3,10 @@ A crappy Strava helper module
 """
 from typing import Dict
 import requests
-
 import stravalib
 
-
-strava_token_url = "https://www.strava.com/oauth/token"
-strava_leaderboard_url = "https://www.strava.com/api/v3/segments/{}/leaderboard?&club_id={}&date_range={}&per_page={}"
 hop_club = 631182
+hop_segment_id = 5471799
 hop_segments = {
     "5807848":"Get IT",
 	"23523730":"Valley View Dip up to Stop Light",
@@ -19,48 +16,49 @@ hop_segments = {
 	"5995685":"Mirror Lake to Hankerson"
 }
 
+#
+def get_auth_url(client_id, current_domain):
+    scopes = ['read','profile:read_all','activity:read_all']
+    client = stravalib.Client()
+    return client.authorization_url(client_id=client_id, scope=scopes, redirect_uri="{}/exchange_token".format(current_domain))
+
 # Register a client with Strava on behalf of user
 def register_user(client_id, secret, auth_code):
 
-    strava_token_params = {
-        'client_id': client_id,
-        'client_secret': secret,
-        'code': auth_code,
-        'grant_type': 'authorization_code'
-    }
+    client = stravalib.Client()
+    token_response = client.exchange_code_for_token(client_id=client_id, client_secret=secret, code=auth_code)
 
-    reg_user_resp = requests.post(strava_token_url, params=strava_token_params, headers={'Content-Type':'application/json'})
+    client.access_token = token_response['access_token']
+    client.refresh_token = token_response['refresh_token']
+    client.token_expires_at = token_response['expires_at']
 
-    if(reg_user_resp.status_code > 201):
-        print("Error registering with Strava: {}".format(reg_user_resp.json()))
-        return None
-
-    reg_user_json = reg_user_resp.json()
+    athlete = client.get_athlete()
 
     user = {
-        "_id": str(reg_user_json['athlete']['id']),
+        "_id": str(athlete.id),
         "type": "user",
-        "name": reg_user_json['athlete']['username'],
-        "firstname": reg_user_json['athlete']['firstname'],
-        "lastname": reg_user_json['athlete']['lastname'],
-        "access_token": reg_user_json['access_token'],
-        "expires_at": reg_user_json['expires_at'],
-        "refresh_token": reg_user_json['refresh_token']
+        "name": athlete.username,
+        "firstname": athlete.firstname,
+        "lastname": athlete.lastname,
+        "access_token": client.access_token,
+        "expires_at": client.token_expires_at,
+        "refresh_token": client.refresh_token
     }
 
     return user
 
 # Generate a new access token from refresh token
 def refresh_access_token(client_id, secret, refresh_token):
-    params = {
-        'client_id': client_id,
-        'client_secret': secret,
-        'grant_type': 'refresh_token',
-        'refresh_token': refresh_token
-        }
-    token_req = requests.post(strava_token_url, params=params, headers={'Content-Type':'application/json'})
-    # todo check response
-    return token_req.json()['access_token']
+
+    client = stravalib.Client()
+    refresh_response = client.refresh_access_token(client_id=client_id, client_secret=secret, refresh_token=refresh_token)
+
+    #TODO: Persist token and access info back with the user
+    access_token = refresh_response['access_token']
+    refresh_token = refresh_response['refresh_token']
+    expires_at = refresh_response['expires_at']
+
+    return access_token
 
 # /* Given a segment, return club leaders for a given date range
 # *
@@ -74,14 +72,25 @@ def segment_leaderboard(segment_id, token, club_id, date_range):
         segment_id, club_id=club_id, timeframe=date_range)
     leader_result = [get_leaderboard_entry_dict(entry)
                      for entry in leaderboard]
-    print(leader_result)
     return leader_result
 
-# Gather hop segment leaders for a given date range
-def hop_segment_leaders(token, date_range):
+# Gather hop segment leaders for a given date
+def hop_segment_leaders(app_cfg, date):
+
+    #TODO:
+    # - Query DB for HOP Activity Segment Data by date
+    # - FE registered user where we don't have Segment Data yet:
+    #    - take user's token and fetch activities for the requested date
+    #    - find their HOP activity (activity with HOP segment)
+    #    - gather Activity segment data & persist
+    # - Build leaderboard from Data
+
+    #For now, just use my token and hit legacy leaderboard API
+    token = refresh_access_token(app_cfg['STRAVA_CLIENT_ID'], app_cfg['STRAVA_SECRET'], app_cfg['STRAVA_REFRESH_TOKEN'])
+
     segment_leaders = {}
     for (segment_id,name) in hop_segments.items():
-        segment_leaders[name] = segment_leaderboard(segment_id, token, hop_club, date_range)
+        segment_leaders[name] = segment_leaderboard(segment_id, token, hop_club, "this_month")
     return segment_leaders
 
 
@@ -103,4 +112,3 @@ def get_leaderboard_entry_dict(
         "start_date": entry.start_date,
         "start_date_local": entry.start_date_local,
         "rank": entry.rank}
-    

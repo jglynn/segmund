@@ -16,10 +16,8 @@ port = int(os.getenv('PORT', 8000))
 
 app_cfg = None
 if 'APP_CONFIG' in os.environ:
-    print('Found APP_CONFIG')
+    print('Found ENV APP_CONFIG')
     app_cfg = json.loads(os.getenv('APP_CONFIG'))
-    for (key,value) in os.environ.items():
-        print("{}={}".format(str(key),str(value)))
 elif os.path.isfile('config.json'):
     with open('config.json') as f:
         print('Found local APP_CONFIG')
@@ -64,9 +62,8 @@ def root():
 
 @app.route('/register', methods=['GET'])
 def initiate_registration_process():
-    scopes = 'read_all,profile:read_all,activity:read_all'
-    callback_uri = "{}/exchange_token&approval_prompt=force&scope={}".format(current_domain, scopes)
-    return render_template('register.html', callback_uri=callback_uri, client_id=app_cfg['STRAVA_CLIENT_ID'])
+    auth_url = strava.get_auth_url(app_cfg['STRAVA_CLIENT_ID'], current_domain)
+    return render_template('register.html', auth_url=auth_url)
 
 @app.route('/register-result', methods=['GET'])
 def get_registration_result():
@@ -74,8 +71,8 @@ def get_registration_result():
 
 @app.route('/results', methods=['GET'])
 def get_hop_segment_results():
-    access_token = strava.refresh_access_token(app_cfg['STRAVA_CLIENT_ID'], app_cfg['STRAVA_SECRET'], app_cfg['STRAVA_REFRESH_TOKEN'])
-    leader_results = strava.hop_segment_leaders(access_token, "this_week")
+    # TODO: date input
+    leader_results = strava.hop_segment_leaders(app_cfg, "YYYY-MM-DD")
     return render_template('results.html', results=leader_results)
 
 
