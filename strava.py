@@ -25,9 +25,9 @@ class Strava:
 
     def get_auth_url(self, current_domain):
         """Construct the Segmund authorization URL for Strava"""
-        scopes = ['read','profile:read_all','activity:read_all']
+        scopes = ['read','activity:read']
         client = stravalib.Client()
-        return client.authorization_url(client_id=self.client_id, scope=scopes, redirect_uri="{}/exchange_token".format(current_domain))
+        return client.authorization_url(client_id=self.client_id, approval_prompt='force', scope=scopes, redirect_uri="{}/exchange_token".format(current_domain))
 
     def register_user(self, auth_code):
         """Register a client with Strava on behalf of user"""
