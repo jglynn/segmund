@@ -32,4 +32,8 @@ Install [IBM Cloud CLI](https://cloud.ibm.com/docs/cli?topic=cloud-cli-getting-s
 
 `ibmcloud login --sso`
 
+IBM will issue a single use auth token you can use for a while.
+
+`ibmcloud target --cf`
+
 `ibmcloud cf logs segmund-toolchain --recent`
