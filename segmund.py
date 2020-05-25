@@ -7,6 +7,7 @@ import json
 import requests
 import time
 import strava
+import date_utils
 
 app = Flask(__name__, static_url_path='')
 
@@ -22,6 +23,8 @@ elif os.path.isfile('config.json'):
     with open('config.json') as f:
         print('Found local APP_CONFIG')
         app_cfg = json.load(f)
+
+strava_service = strava.Strava(app_cfg)
 
 current_domain = "http://localhost:{}".format(str(port))
 if 'VCAP_APPLICATION' in os.environ:
@@ -62,7 +65,8 @@ def root():
 
 @app.route('/register', methods=['GET'])
 def initiate_registration_process():
-    auth_url = strava.get_auth_url(app_cfg['STRAVA_CLIENT_ID'], current_domain)
+    print("current_domain={}".format(current_domain))
+    auth_url = strava_service.get_auth_url(current_domain)
     return render_template('register.html', auth_url=auth_url)
 
 @app.route('/register-result', methods=['GET'])
@@ -71,10 +75,23 @@ def get_registration_result():
 
 @app.route('/results', methods=['GET'])
 def get_hop_segment_results():
-    # TODO: date input
-    leader_results = strava.hop_segment_leaders(app_cfg, "YYYY-MM-DD")
-    return render_template('results.html', results=leader_results)
+    activity_date = request.args.get('date')
+    if activity_date is None:
+        leader_results = strava_service.hop_alltime_leaders(db)
+    else:
+        leader_results = strava_service.get_hop_activities(db, activity_date)
+    # For now, provide a rolling window of 5 thursdays -- eventually this will just come from DB
+    return render_template('results.html', results=leader_results, date=activity_date, dates=date_utils.thursdays(5))
 
+@app.route('/activities', methods=['GET'])
+def get_activities():
+    activity_date = request.args.get('date')
+    #TODO Validate date
+    if client:
+        return jsonify(strava_service.get_hop_activities(db, activity_date))
+    else:
+        print('No database')
+        return jsonify([])
 
 # /* Endpoint to register user token to database.
 # *  Send a GET request to /exchange_token with params: state, code, scope
@@ -86,7 +103,7 @@ def register_user():
     auth_code = request.args.get('code')
     scope = request.args.get('scope')
 
-    user = strava.register_user(app_cfg['STRAVA_CLIENT_ID'], app_cfg['STRAVA_SECRET'], auth_code)
+    user = strava_service.register_user(auth_code)
 
     if user is None:
         return "Failed to register user with Strava"
@@ -110,7 +127,6 @@ def register_user():
 def get_users():
     if client:
         firstname = request.args.get('firstname')
-        #current_ms_time = int(round(time.time()))
         selector = {'type': {'$eq': 'user'}}
         docs = db.get_query_result(selector)
         return render_template('users.html', users=docs, firstname=firstname)

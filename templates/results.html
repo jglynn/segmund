@@ -37,6 +37,16 @@
           <hr />
           <ul class="nav flex-column">
             <li class="nav-item">
+              <a class="nav-link" href="/results">Results</a>
+              <ul class="flex-column nav pl-4">
+                {% for date in dates %}
+                <li class="nav-item">
+                   <a class="nav-link p-1" href="/results?date={{ date }}">{{ date }}</a>
+                </li>
+                {% endfor %}
+              </ul>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="/register">Register</a>
             </li>
             <li class="nav-item">
@@ -47,33 +57,44 @@
       </nav>
 
       <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
-        {% for segment, leaders in results.items() %}
-        <a name="{{ segment }}" />
-        <hr />
-        <h3>{{ segment }}</h3>
-        <div class="table-responsive">
-          <table class="table table-sm table-striped">
-            <thead class="thead-dark">
-              <tr>
-                <th scope="col">Rank</th>
-                <th scope="col">Athlete</th>
-                <th scope="col">Time (Seconds)</th>
-                <th scope="col">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for result in leaders %}
-              <tr>
-                <th scope="row">{{ result['rank'] }}</th>
-                <td>{{ result['athlete_name'] }}</td>
-                <td>{{ result['elapsed_time'] }}</td>
-                <td>{{ result['start_date_local'] }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% endfor %}
+          {% if date is none %}
+          <h3>All Time Segment Leaders</h3>
+          {% else %}
+          <h3>{{ date }}</h3>
+          {% endif %}
+          {% for segment, leaders in results.items() %}
+          <a name="{{ segment }}" />
+          <hr />
+          <h3>{{ segment }}</h3>
+          <div class="table-responsive">
+            <table class="table table-sm table-striped">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">Rank</th>
+                  <th scope="col">Athlete</th>
+                  <th scope="col">Time</th>
+                  <th scope="col">Date</th>
+                  <th scope="col">HR</th>
+                  <th scope="col">WATTS</th>
+                  <th scope="col">Activity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for result in leaders %}
+                <tr>
+                  <th scope="row">{{ result['rank'] }}</th>
+                  <td>{{ result['athlete_name'] }}</td>
+                  <td>{{ result['elapsed_time'] }}</td>
+                  <td>{{ result['start_date_local'] }}</td>
+                  <td>{{ result['average_heartrate'] }}</td>
+                  <td>{{ result['average_watts'] }}</td>
+                  <td>{{ result['activity'] }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endfor %}
       </main>
     </div>
   </div>
