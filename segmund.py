@@ -101,14 +101,10 @@ def register_user():
 
 @app.route('/users', methods=['GET'])
 def get_users():
-    if cloudant_ext.client:
-        firstname = request.args.get('firstname')
-        selector = {'type': {'$eq': 'user'}}
-        docs = cloudant_ext.db.get_query_result(selector)
-        return render_template('users.html', users=docs, firstname=firstname)
-    else:
-        print('No database')
-        return jsonify([])
+    firstname = request.args.get('firstname')
+    selector = {'type': {'$eq': 'user'}}
+    docs = cloudant_ext.db.get_query_result(selector)
+    return render_template('users.html', users=docs, firstname=firstname)
 
 @atexit.register
 def shutdown():
