@@ -24,6 +24,9 @@ class FlaskCloudant(object):
             CLOUDANT_USERNAME
             CLOUDANT_PASSWORD
             CLOUDANT_URL
+
+        If necessary, these can be overridden by setting the repsective
+        parameters in the Flask app config.
         """
         if 'VCAP_SERVICES' in os.environ:
             vcap = json.loads(os.getenv('VCAP_SERVICES'))
