@@ -85,3 +85,16 @@ class FlaskCloudant(object):
                     current_app.config['CLOUDANT_DB_NAME'],
                     throw_on_exists=False)
             return ctx.cloudant_db
+
+
+cloudant_ext = FlaskCloudant()
+
+
+class MetaDocument(type):
+
+    name = None
+    _db = None
+
+    def __getitem__(cls, key):
+        return cls.db[key]
+
