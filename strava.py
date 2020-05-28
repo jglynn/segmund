@@ -135,8 +135,13 @@ class Strava:
                             "average_heartrate": str(effort.average_heartrate),
                             "average_watts": str(effort.average_watts)
                             })
-        return segment_leaders
+        segment_leaders_sorted = {
+            segment: process_segment_efforts(efforts)
+            for segment, efforts in segment_leaders.items()
+        }
+        return segment_leaders_sorted
 
+        
     def get_public_activities(self, user, start_date, end_date):
         """Return detailed public activities for a given user beteen two dates"""
         token = self.get_user_access_token(user)
@@ -173,3 +178,9 @@ class Strava:
             return refresh_response['access_token']
         else:
             return user.access_token
+
+def process_segment_efforts(efforts):
+    processed = sorted(efforts, key=lambda x: x["elapsed_time"])
+    for i, effort in enumerate(processed):
+        effort["rank"] = i + 1
+    return processed
