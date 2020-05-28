@@ -53,14 +53,14 @@ class Document:
 
     def exists(self):
         """Return True if this document exists in database."""
-        return User.contains(self._id)
+        return Document.contains(self._id)
 
     @classmethod
     def all(cls):
-        """Get all instances of specific type defined by derived class."""
+        """Get all documents of specific type defined by derived class."""
         selector = {'type': {'$eq': cls.__name__.lower()}}
-        users = cloudant_ext.db.get_query_result(selector)
-        return [cls.from_raw(user) for user in users]
+        docs = cloudant_ext.db.get_query_result(selector)
+        return [cls.from_raw(doc) for doc in docs]
 
     @classmethod
     def delete(cls, _id):
