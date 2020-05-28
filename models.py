@@ -6,7 +6,6 @@ import cloudant
 class Document:
     """Metaclass to represent mapped Cloudant objects."""
 
-    # TODO (rocco): figure out if this should be an abstract base class
     def __init__(self, _rev=None):
         """Construct a document.
 
