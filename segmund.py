@@ -1,15 +1,13 @@
-from cloudant import Cloudant
-from cloudant.document import Document
-from flask import Flask, render_template, request, jsonify, redirect
-import atexit
+
 import os
 import json
-import requests
-import time
+
+from flask import Flask, render_template, request, jsonify, redirect
 
 import strava
 import date_utils
-import database
+from database import cloudant_ext
+import models
 
 app = Flask(__name__, static_url_path='')
 
@@ -33,7 +31,7 @@ if 'VCAP_APPLICATION' in os.environ:
     vcap_app = json.loads(os.getenv('VCAP_APPLICATION'))
     current_domain = "https://{}".format(vcap_app['application_uris'][0])
 
-cloudant_ext = database.FlaskCloudant(app)
+cloudant_ext.init_app(app)
 
 @app.route('/')
 def root():
@@ -53,9 +51,9 @@ def get_registration_result():
 def get_hop_segment_results():
     activity_date = request.args.get('date')
     if activity_date is None:
-        leader_results = strava_service.hop_alltime_leaders(cloudant_ext.db)
+        leader_results = strava_service.hop_alltime_leaders()
     else:
-        leader_results = strava_service.get_hop_activities(cloudant_ext.db, activity_date)
+        leader_results = strava_service.get_hop_activities(activity_date)
     # For now, provide a rolling window of 5 thursdays -- eventually this will just come from DB
     return render_template('results.html', results=leader_results, date=activity_date, dates=date_utils.thursdays(5))
 
@@ -64,7 +62,7 @@ def get_activities():
     activity_date = request.args.get('date')
     #TODO Validate date
     if cloudant_ext.client:
-        return jsonify(strava_service.get_hop_activities(cloudant_ext.db, activity_date))
+        return jsonify(strava_service.get_hop_activities(activity_date))
     else:
         print('No database')
         return jsonify([])
@@ -75,40 +73,31 @@ def get_activities():
 # */
 @app.route('/exchange_token', methods=['GET'])
 def register_user():
-    state = request.args.get('state')
     auth_code = request.args.get('code')
-    scope = request.args.get('scope')
 
     user = strava_service.register_user(auth_code)
 
+    # TODO: remove this condition?  I don't think the function can return None
     if user is None:
         return "Failed to register user with Strava"
 
-    if Document(cloudant_ext.db, user['_id']).exists():
-        print("User id={} exists already, Updating.".format(user['_id']))
-        user_document = cloudant_ext.db[user['_id']]
-        user_document.update(user)
-        user_document.save()
+    if user.exists():
+        print("User id={} exists already, Updating.".format(user._id))
     else:
-        print ("Creating User: {}".format(user))
-        user_document = cloudant_ext.db.create_document(user)
-        user['_id'] = user_document['_id']
+        print("Creating User: {}".format(user))
+        user.save()
 
-    if user_document.exists():
-        print('Doc with _id={}'.format(user['_id']))
+    if user.exists():
+        print('Doc with _id={}'.format(user._id))
 
-    return redirect('/users?firstname={}'.format(user['firstname']), code=302)
+    return redirect('/users?firstname={}'.format(user.firstname), code=302)
 
 @app.route('/users', methods=['GET'])
 def get_users():
     firstname = request.args.get('firstname')
-    selector = {'type': {'$eq': 'user'}}
-    docs = cloudant_ext.db.get_query_result(selector)
+    docs = [vars(u) for u in models.User.all()]
     return render_template('users.html', users=docs, firstname=firstname)
 
-@atexit.register
-def shutdown():
-    pass
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port, debug=True)
