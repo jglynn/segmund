@@ -77,15 +77,12 @@ def register_user():
 
     user = strava_service.register_user(auth_code)
 
-    # TODO: remove this condition?  I don't think the function can return None
-    if user is None:
-        return "Failed to register user with Strava"
-
     if user.exists():
         print("User id={} exists already, Updating.".format(user._id))
     else:
         print("Creating User: {}".format(user))
-        user.save()
+
+    user.save()
 
     if user.exists():
         print('Doc with _id={}'.format(user._id))
