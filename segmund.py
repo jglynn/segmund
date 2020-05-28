@@ -1,10 +1,8 @@
-from cloudant.document import Document
-from flask import Flask, render_template, request, jsonify, redirect
-import atexit
+
 import os
 import json
-import requests
-import time
+
+from flask import Flask, render_template, request, jsonify, redirect
 
 import strava
 import date_utils
@@ -100,9 +98,6 @@ def get_users():
     docs = [vars(u) for u in models.User.all()]
     return render_template('users.html', users=docs, firstname=firstname)
 
-@atexit.register
-def shutdown():
-    pass
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port, debug=True)

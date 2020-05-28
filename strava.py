@@ -2,10 +2,12 @@
 A crappy Strava helper module
 """
 from typing import Dict
-import requests
+
 import stravalib
+
 import date_utils
 import models
+
 
 class Strava:
 
