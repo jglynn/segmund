@@ -1,4 +1,3 @@
-from cloudant import Cloudant
 from cloudant.document import Document
 from flask import Flask, render_template, request, jsonify, redirect
 import atexit
@@ -46,6 +45,14 @@ def allusers():
     """Dummy route for manual testing of the Users object."""
     return jsonify([u.__dict__ for u in models.User.all()])
 
+@app.route('/deletedom')
+def deletedom():
+    """Unregister Dominick."""
+
+    models.User.delete("5121714")
+    return "deleted"
+
+
 
 @app.route('/register', methods=['GET'])
 def initiate_registration_process():
@@ -83,29 +90,24 @@ def get_activities():
 # */
 @app.route('/exchange_token', methods=['GET'])
 def register_user():
-    state = request.args.get('state')
     auth_code = request.args.get('code')
-    scope = request.args.get('scope')
 
     user = strava_service.register_user(auth_code)
 
+    # TODO: remove this condition?  I don't think the function can return None
     if user is None:
         return "Failed to register user with Strava"
 
-    if Document(cloudant_ext.db, user['_id']).exists():
-        print("User id={} exists already, Updating.".format(user['_id']))
-        user_document = cloudant_ext.db[user['_id']]
-        user_document.update(user)
-        user_document.save()
+    if user.exists():
+        print("User id={} exists already, Updating.".format(user._id))
     else:
-        print ("Creating User: {}".format(user))
-        user_document = cloudant_ext.db.create_document(user)
-        user['_id'] = user_document['_id']
+        print("Creating User: {}".format(user))
+        user.save()
 
-    if user_document.exists():
-        print('Doc with _id={}'.format(user['_id']))
+    if user.exists():
+        print('Doc with _id={}'.format(user._id))
 
-    return redirect('/users?firstname={}'.format(user['firstname']), code=302)
+    return redirect('/users?firstname={}'.format(user.firstname), code=302)
 
 @app.route('/users', methods=['GET'])
 def get_users():

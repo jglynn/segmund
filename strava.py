@@ -5,6 +5,7 @@ from typing import Dict
 import requests
 import stravalib
 import date_utils
+import models
 
 class Strava:
 
@@ -40,18 +41,14 @@ class Strava:
 
         athlete = client.get_athlete()
 
-        user = {
-            "_id": str(athlete.id),
-            "type": "user",
-            "name": athlete.username,
-            "firstname": athlete.firstname,
-            "lastname": athlete.lastname,
-            "access_token": client.access_token,
-            "expires_at": client.token_expires_at,
-            "refresh_token": client.refresh_token
-        }
+        return models.User(_id=str(athlete.id),
+                           name=athlete.username,
+                           firstname=athlete.firstname,
+                           lastname=athlete.lastname,
+                           access_token=client.access_token,
+                           expires_at=client.token_expires_at,
+                           refresh_token=client.refresh_token)
 
-        return user
 
     # /* Given a segment, return club leaders for a given date range
     # *
