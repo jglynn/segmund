@@ -1,5 +1,6 @@
 
 from database import cloudant_ext
+import cloudant
 
 
 class Document:
@@ -16,11 +17,15 @@ class Document:
         self._rev = _rev
 
     def save(self):
-        """Save the object to the Cloudant database."""
-        doc = cloudant_ext.db[self._id]
-        for k, v in vars(self):
-            doc[k] = v
-        doc.save()
+        """Save the object to the Cloudant database, create if necessary."""
+        if self.exists():
+            doc = cloudant_ext.db[self._id]
+            doc.update(vars(self))
+            doc.save()
+        else:
+            doc = vars(self)
+            del doc['_rev']
+            cloudant_ext.db.create_document(doc)
 
     @classmethod
     def from_raw(cls, raw):
@@ -30,7 +35,7 @@ class Document:
 
     @classmethod
     def get(cls, _id):
-        """Get instance corresponding to ID.
+        """Get document corresponding to ID.
 
         Args:
             _id: primary key/ID of object to be retrieved
@@ -39,11 +44,34 @@ class Document:
         return cls.from_raw(doc)
 
     @classmethod
+    def contains(cls, _id):
+        """Return True if document with _id exists in DB.
+
+        Args:
+            _id: primary key/ID of object to be retrieved
+        """
+        return cloudant.document.Document(cloudant_ext.db, _id).exists()
+
+    def exists(self):
+        """Return True if this document exists in database."""
+        return User.contains(self._id)
+
+    @classmethod
     def all(cls):
         """Get all instances of specific type defined by derived class."""
         selector = {'type': {'$eq': cls.__name__.lower()}}
         users = cloudant_ext.db.get_query_result(selector)
         return [cls.from_raw(user) for user in users]
+
+    @classmethod
+    def delete(cls, _id):
+        """Delete document with _id if exists.
+
+        Args:
+            _id: primary key/ID of object to be deleted
+        """
+        if cls.contains(_id):
+            cloudant_ext.db[_id].delete()
 
 
 class User(Document):
