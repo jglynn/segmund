@@ -63,16 +63,18 @@ class Strava:
                          for entry in leaderboard]
         return leader_result
 
-    # Gather hop segment leaders for a given date
-    def hop_alltime_leaders(self, db):
-
-        #TODO: Move this kind of stuff into DB service
-        john = db['326452']
-        johns_token = self.get_user_access_token(john, db)
+    def hop_alltime_leaders(self):
+        """Gather all-time hop segment leaders."""
+        # TODO: clarify if we really should use John for this.  Couldn't
+        # this use the current user's token?  Maybe that would be slightly
+        # safer for rate limits?
+        john = models.User.get('326452')
+        johns_token = self.get_user_access_token(john)
 
         segment_leaders = {}
-        for (segment_id,name) in self.hop_segments.items():
-            segment_leaders[name] = self.segment_leaderboard(segment_id, johns_token, self.hop_club, "this_month")
+        for (segment_id, name) in self.hop_segments.items():
+            segment_leaders[name] = self.segment_leaderboard(
+                segment_id, johns_token, self.hop_club, "this_month")
         return segment_leaders
 
     def get_leaderboard_entry_dict(self,
@@ -94,7 +96,7 @@ class Strava:
             "start_date_local": entry.start_date_local,
             "rank": entry.rank}
 
-    def get_hop_activities(self, db, hop_date):
+    def get_hop_activities(self, hop_date):
         """
             Compile activity segment results for HOP on a given date
 
@@ -107,8 +109,7 @@ class Strava:
                 - Persist Activity Segment Data to DB
              - Build leaderboard from DB data
         """
-        selector = {'type': {'$eq': 'user'}}
-        users = db.get_query_result(selector)
+        users = models.User.all()
 
         segment_leaders = {segment: [] for segment in self.hop_segments.values()}
         start_date = hop_date
@@ -116,7 +117,7 @@ class Strava:
 
         print("Searching for activities between start_date={} and end_date={}".format(start_date, end_date))
         for user in users:
-            activities = self.get_public_hop_activities(user, db, start_date, end_date)
+            activities = self.get_public_hop_activities(user, start_date, end_date)
             for activity in activities:
                 for effort in activity.segment_efforts:
                     if str(effort.segment.id) in self.hop_segments.keys():
@@ -124,7 +125,8 @@ class Strava:
                             "segment_name":effort.name,
                             "rank": "N/A",
                             "athlete_id": str(activity.athlete.id),
-                            "athlete_name": "{}, {}".format(user['lastname'], user['firstname']),
+                            "athlete_name": 
+                                f"{user.firstname}, {user.lastname}",
                             "activity": activity.name,
                             "start_date_local": str(activity.start_date_local),
                             "elapsed_time": str(effort.elapsed_time),
@@ -133,37 +135,39 @@ class Strava:
                             })
         return segment_leaders
 
-    def get_public_activities(self, user, db, start_date, end_date):
+    def get_public_activities(self, user, start_date, end_date):
         """Return detailed public activities for a given user beteen two dates"""
-        token = self.get_user_access_token(user, db)
+        token = self.get_user_access_token(user)
         client = stravalib.Client(token)
         activities = client.get_activities(after=start_date, before=end_date)
-        return map(lambda activity : client.get_activity(activity.id, True),
-                    filter(lambda activity: not activity.private, activities))
+        return map(lambda activity: client.get_activity(activity.id, True),
+                   filter(lambda activity: not activity.private, activities))
 
-    def get_public_hop_activities(self, user, db, start_date, end_date):
+    def get_public_hop_activities(self, user, start_date, end_date):
         """Return any activities that contain the hop segment"""
         return filter(lambda activity: self.has_hop_segment(activity),
-                self.get_public_activities(user, db, start_date, end_date))
+                      self.get_public_activities(user, start_date, end_date))
 
     def has_hop_segment(self, activity):
         """True if an activity contains the HOP segment"""
         return any(effort.segment.id == self.hop_segment_id
-                        for effort in activity.segment_efforts)
+                   for effort in activity.segment_efforts)
 
-    def get_user_access_token(self, user, db):
+    def get_user_access_token(self, user):
         """Return user access token, if expired refresh it and persis to DB"""
-        if date_utils.is_expired(user['expires_at']):
-            print("token is expired for user={}".format(user))
+        if date_utils.is_expired(user.expires_at):
+            print("token is expired for user={}".format(user._id))
             client = stravalib.Client()
-            refresh_response = client.refresh_access_token(client_id=self.client_id,
-                client_secret=self.secret, refresh_token=user['refresh_token'])
+            refresh_response = client.refresh_access_token(
+                client_id=self.client_id,
+                client_secret=self.secret,
+                refresh_token=user.refresh_token)
             # update the user with their new token and expiration
-            user_document = db[user['_id']]
-            user_document['access_token'] = refresh_response['access_token']
-            user_document['refresh_token'] = refresh_response['refresh_token']
-            user_document['expires_at'] = refresh_response['expires_at']
-            user_document.save()
+            
+            user.access_token = refresh_response['access_token']
+            user.refresh_token = refresh_response['refresh_token']
+            user.expires_at = refresh_response['expires_at']
+            user.save()
             return refresh_response['access_token']
         else:
-            return user['access_token']
+            return user.access_token

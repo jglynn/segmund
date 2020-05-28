@@ -68,9 +68,9 @@ def get_registration_result():
 def get_hop_segment_results():
     activity_date = request.args.get('date')
     if activity_date is None:
-        leader_results = strava_service.hop_alltime_leaders(cloudant_ext.db)
+        leader_results = strava_service.hop_alltime_leaders()
     else:
-        leader_results = strava_service.get_hop_activities(cloudant_ext.db, activity_date)
+        leader_results = strava_service.get_hop_activities(activity_date)
     # For now, provide a rolling window of 5 thursdays -- eventually this will just come from DB
     return render_template('results.html', results=leader_results, date=activity_date, dates=date_utils.thursdays(5))
 
@@ -79,7 +79,7 @@ def get_activities():
     activity_date = request.args.get('date')
     #TODO Validate date
     if cloudant_ext.client:
-        return jsonify(strava_service.get_hop_activities(cloudant_ext.db, activity_date))
+        return jsonify(strava_service.get_hop_activities(activity_date))
     else:
         print('No database')
         return jsonify([])
@@ -112,8 +112,7 @@ def register_user():
 @app.route('/users', methods=['GET'])
 def get_users():
     firstname = request.args.get('firstname')
-    selector = {'type': {'$eq': 'user'}}
-    docs = cloudant_ext.db.get_query_result(selector)
+    docs = [vars(u) for u in models.User.all()]
     return render_template('users.html', users=docs, firstname=firstname)
 
 @atexit.register
