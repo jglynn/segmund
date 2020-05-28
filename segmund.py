@@ -39,21 +39,6 @@ cloudant_ext.init_app(app)
 def root():
     return app.send_static_file('index.html')
 
-#TODO (rocco): delete this route
-@app.route('/allusers')
-def allusers():
-    """Dummy route for manual testing of the Users object."""
-    return jsonify([u.__dict__ for u in models.User.all()])
-
-@app.route('/deletedom')
-def deletedom():
-    """Unregister Dominick."""
-
-    models.User.delete("5121714")
-    return "deleted"
-
-
-
 @app.route('/register', methods=['GET'])
 def initiate_registration_process():
     print("current_domain={}".format(current_domain))
