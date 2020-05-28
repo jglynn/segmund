@@ -19,12 +19,19 @@ class Document:
         """Save the object to the Cloudant database, create if necessary."""
         if self.exists():
             doc = cloudant_ext.db[self._id]
-            doc.update(vars(self))
+            doc.update(self.to_doc_dict())
             doc.save()
         else:
-            doc = vars(self)
-            del doc['_rev']
-            cloudant_ext.db.create_document(doc)
+            cloudant_ext.db.create_document(self.to_doc_dict())
+
+    def to_doc_dict(self):
+        """Convert to dict without the _rev key.
+
+        When saving a document, the _rev key can not be present.
+        """
+        doc_dict = vars(self)
+        del doc_dict['_rev']
+        return doc_dict
 
     @classmethod
     def from_raw(cls, raw):
@@ -53,14 +60,14 @@ class Document:
 
     def exists(self):
         """Return True if this document exists in database."""
-        return User.contains(self._id)
+        return Document.contains(self._id)
 
     @classmethod
     def all(cls):
-        """Get all instances of specific type defined by derived class."""
+        """Get all documents of specific type defined by derived class."""
         selector = {'type': {'$eq': cls.__name__.lower()}}
-        users = cloudant_ext.db.get_query_result(selector)
-        return [cls.from_raw(user) for user in users]
+        docs = cloudant_ext.db.get_query_result(selector)
+        return [cls.from_raw(doc) for doc in docs]
 
     @classmethod
     def delete(cls, _id):
