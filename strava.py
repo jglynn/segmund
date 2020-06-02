@@ -7,7 +7,7 @@ import stravalib
 
 import date_utils
 import models
-
+import logging
 
 class Strava:
 
@@ -23,6 +23,7 @@ class Strava:
     }
 
     def __init__(self, config):
+        logging.getLogger("stravalib.attributes.EntityCollection").setLevel("ERROR") # Silence Warnings
         self.client_id = config['STRAVA_CLIENT_ID']
         self.secret = config['STRAVA_SECRET']
 
@@ -127,7 +128,7 @@ class Strava:
                             "segment_name":effort.name,
                             "rank": "N/A",
                             "athlete_id": str(activity.athlete.id),
-                            "athlete_name": 
+                            "athlete_name":
                                 f"{user.firstname}, {user.lastname}",
                             "activity": activity.name,
                             "start_date_local": str(activity.start_date_local),
@@ -141,7 +142,7 @@ class Strava:
         }
         return segment_leaders_sorted
 
-        
+
     def get_public_activities(self, user, start_date, end_date):
         """Return detailed public activities for a given user beteen two dates"""
         token = self.get_user_access_token(user)
@@ -170,7 +171,7 @@ class Strava:
                 client_secret=self.secret,
                 refresh_token=user.refresh_token)
             # update the user with their new token and expiration
-            
+
             user.access_token = refresh_response['access_token']
             user.refresh_token = refresh_response['refresh_token']
             user.expires_at = refresh_response['expires_at']
