@@ -8,6 +8,9 @@ import stravalib
 import date_utils
 import models
 import logging
+import collections
+
+TokenInfo = collections.namedtuple('TokenInfo', 'access_token refresh_token expires_at')
 
 class Strava:
 
@@ -26,6 +29,9 @@ class Strava:
         logging.getLogger("stravalib.attributes.EntityCollection").setLevel("ERROR") # Silence Warnings
         self.client_id = config['STRAVA_CLIENT_ID']
         self.secret = config['STRAVA_SECRET']
+        self.refresh_token = config['STRAVA_REFRESH_TOKEN']
+        self.access_token = None
+        self.expires_at = 0
 
     def get_auth_url(self, current_domain):
         """Construct the Segmund authorization URL for Strava"""
@@ -68,16 +74,12 @@ class Strava:
 
     def hop_alltime_leaders(self):
         """Gather all-time hop segment leaders."""
-        # TODO: clarify if we really should use John for this.  Couldn't
-        # this use the current user's token?  Maybe that would be slightly
-        # safer for rate limits?
-        john = models.User.get('326452')
-        johns_token = self.get_user_access_token(john)
+        app_access_token = self.get_system_access_token()
 
         segment_leaders = {}
         for (segment_id, name) in self.hop_segments.items():
             segment_leaders[name] = self.segment_leaderboard(
-                segment_id, johns_token, self.hop_club, "this_month")
+                segment_id, app_access_token, self.hop_club, "this_month")
         return segment_leaders
 
     def get_leaderboard_entry_dict(self,
@@ -162,23 +164,35 @@ class Strava:
                    for effort in activity.segment_efforts)
 
     def get_user_access_token(self, user):
-        """Return user access token, if expired refresh it and persis to DB"""
+        """Return active user access token, if expired refresh it and persis to DB"""
         if date_utils.is_expired(user.expires_at):
-            print("token is expired for user={}".format(user._id))
-            client = stravalib.Client()
-            refresh_response = client.refresh_access_token(
-                client_id=self.client_id,
-                client_secret=self.secret,
-                refresh_token=user.refresh_token)
-            # update the user with their new token and expiration
-
-            user.access_token = refresh_response['access_token']
-            user.refresh_token = refresh_response['refresh_token']
-            user.expires_at = refresh_response['expires_at']
+            print("user token is expired for user={}, refreshing".format(user._id))
+            token = self.refresh_access_token(user.refresh_token)    
+            user.access_token = token.access_token
+            user.refresh_token = token.refresh_token
+            user.expires_at = token.expires_at
             user.save()
-            return refresh_response['access_token']
-        else:
-            return user.access_token
+        return user.access_token
+
+    def get_system_access_token(self):
+        """Return active Segmund access token, if expired update settings"""
+        if date_utils.is_expired(self.expires_at):
+            print("system token is expired, refreshing")
+            token = self.refresh_access_token(self.refresh_token)
+            self.access_token = token.access_token
+            self.refresh_token = token.refresh_token
+            self.expires_at = token.expires_at
+        return self.access_token
+
+    def refresh_access_token(self, refresh_token):
+        """Request a new access_token using provided refresh_token"""
+        client = stravalib.Client()
+        resp = client.refresh_access_token(
+            client_id=self.client_id,
+            client_secret=self.secret,
+            refresh_token=refresh_token)
+        return TokenInfo(resp['access_token'],resp['refresh_token'],resp['expires_at'])
+            
 
 def process_segment_efforts(efforts):
     processed = sorted(efforts, key=lambda x: x["elapsed_time"])
