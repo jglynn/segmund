@@ -2,15 +2,12 @@
 A crappy Strava helper module
 """
 from typing import Dict
+from types import SimpleNamespace
 
 import stravalib
-
 import date_utils
 import models
 import logging
-import collections
-
-TokenInfo = collections.namedtuple('TokenInfo', 'access_token refresh_token expires_at')
 
 class Strava:
 
@@ -191,7 +188,7 @@ class Strava:
             client_id=self.client_id,
             client_secret=self.secret,
             refresh_token=refresh_token)
-        return TokenInfo(resp['access_token'],resp['refresh_token'],resp['expires_at'])
+        return SimpleNamespace(**resp)
             
 
 def process_segment_efforts(efforts):
