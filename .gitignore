@@ -37,8 +37,9 @@ venv/
 *.manifest
 *.spec
 
-# Intellij/PyCharm config
+# Intellij/PyCharm/VSCode config
 .idea/
+.vscode/
 
 # Installer logs
 pip-log.txt
