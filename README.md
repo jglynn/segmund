@@ -1,6 +1,6 @@
 # segmund
 
-A cruddy thing for aggregating segment data from Strava.
+A crummy thing for aggregating segment data from Strava to support ["enduro"](https://en.wikipedia.org/wiki/Enduro_(mountain_biking)) style road cycling events.
 
 ## Getting Started
 
